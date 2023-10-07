@@ -10,7 +10,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 @SpringBootTest
-class S3ServiceTest {
+class S3ServiceImplTest {
 
     static {
         System.setProperty("com.amazonaws.sdk.disableEc2Metadata", "true");

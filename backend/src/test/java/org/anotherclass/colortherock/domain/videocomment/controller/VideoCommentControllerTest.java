@@ -115,6 +115,7 @@ class VideoCommentControllerTest extends IntegrationTest {
                 .getResponse();
 
         BaseResponse<List<CommentListResponse>> arrayList = objectMapper.readValue(response.getContentAsString(), BaseResponse.class);
+
         Assertions.assertEquals(commentSize, arrayList.getResult().size());
     }
 
