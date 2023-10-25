@@ -12,7 +12,7 @@ import javax.persistence.*;
 @NoArgsConstructor
 public class MemberRecord {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
     private Long id;
 

@@ -42,8 +42,9 @@ public class VideoBoardService {
 
 
     /**
+     * 성공 영상 게시판에서 조건에 맞는 영상 가져오기
      *
-     * @param condition
+     * @param condition {@link VideoBoardSearchRequest}
      * @return
      */
     @Transactional(readOnly = true)
@@ -58,17 +59,24 @@ public class VideoBoardService {
 
         return slices.toList().stream()
                 .map(vb ->
-                    VideoBoardSummaryResponse.builder()
-                            .videoBoardId(vb.getId())
-                            .title(vb.getTitle())
-                            .thumbnailURL(vb.getVideo().getThumbnailURL())
-                            .color(vb.getVideo().getColor())
-                            .createdDate(vb.getCreatedDate().toLocalDate())
-                            .gymName(vb.getVideo().getGymName())
-                            .colorCode(ColorCodeKorean.getColor(vb.getVideo().getColor()))
-                            .build()).collect(Collectors.toList());
+                        VideoBoardSummaryResponse.builder()
+                                .videoBoardId(vb.getId())
+                                .title(vb.getTitle())
+                                .thumbnailURL(vb.getVideo().getThumbnailURL())
+                                .color(vb.getVideo().getColor())
+                                .createdDate(vb.getCreatedDate().toLocalDate())
+                                .gymName(vb.getVideo().getGymName())
+                                .colorCode(ColorCodeKorean.getColor(vb.getVideo().getColor()))
+                                .build()).collect(Collectors.toList());
     }
 
+    /**
+     * 내가 성공한 영상 게시판에 올리기
+     *
+     * @param memberId                  멤버 id
+     * @param successVideoUploadRequest {@link SuccessVideoUploadRequest}
+     * @return
+     */
     @Transactional
     public Long uploadMySuccessVideoPost(Long memberId, SuccessVideoUploadRequest successVideoUploadRequest) {
         Member member = memberRepository.findById(memberId)
@@ -89,12 +97,17 @@ public class VideoBoardService {
         return newVideoBoard.getId();
     }
 
-    // 완등 영상 게시글 상세 조회
+    /**
+     * 완등 영상 게시글 상세 조회
+     *
+     * @param videoBoardId 게시글 id
+     * @return
+     */
     @Transactional(readOnly = true)
     public VideoBoardDetailResponse getVideoDetail(Long videoBoardId) {
         VideoBoard vb = videoBoardRepository.findById(videoBoardId)
                 .orElseThrow(() -> new PostNotFoundException(GlobalErrorCode.POST_NOT_FOUND));
-        if(Boolean.TRUE.equals(vb.getIsHidden())) return null;
+        if (Boolean.TRUE.equals(vb.getIsHidden())) return null;
         return VideoBoardDetailResponse.builder()
                 .videoBoardId(vb.getId())
                 .nickname(vb.getMember().getNickname())
@@ -104,7 +117,13 @@ public class VideoBoardService {
                 .build();
     }
 
-    // 완등 영상 게시글 수정
+
+    /**
+     * 완등 영상 게시글 수정
+     *
+     * @param memberId 멤버 id
+     * @param request  {@link SuccessPostUpdateRequest}
+     */
     @Transactional
     public void updateSuccessPost(Long memberId, SuccessPostUpdateRequest request) {
         VideoBoard vb = videoBoardRepository.findById(request.getVideoBoardId())
@@ -114,7 +133,12 @@ public class VideoBoardService {
         vb.getVideo().update(request.getLevel(), request.getGymName(), request.getColor());
     }
 
-    // 완등 영상 게시글 삭제
+    /**
+     * 완등 영상 게시글 삭제
+     *
+     * @param videoBoardId 비디오 게시글 id
+     * @param memberId     사용자 id
+     */
     @Transactional
     public void deleteSuccessPost(Long memberId, Long videoBoardId) {
         VideoBoard vb = videoBoardRepository.findById(videoBoardId)
@@ -125,7 +149,11 @@ public class VideoBoardService {
         videoBoardRepository.delete(vb);
     }
 
-    // 내가 작성한 완등 게시글 조회
+    /**
+     * 내가 작성한 완등 게시글 조회
+     * @param memberId 멤버 id
+     * @param storeId no offset 방식 이전 PK
+     */
     @Transactional(readOnly = true)
     public List<VideoBoardSummaryResponse> getMySuccessVideoPosts(Long memberId, Long storeId) {
         Pageable pageable = Pageable.ofSize(8);

@@ -83,21 +83,4 @@ public class MemberService {
     public boolean duplicateNickname(String nickname) {
         return !memberRepository.existsByNickname(nickname);
     }
-
-//    @PostConstruct
-//    public void initTestUser() {
-//        Member member = Member.builder()
-//                .registrationId(Member.RegistrationId.kakao)
-//                .email("suker80@naver.com")
-//                .nickname("닉네임")
-//                .build();
-//
-//        Member save = memberRepository.save(member);
-//        memberId = save.getId();
-//    }
-//
-//    public String testToken() {
-//        Member member = memberRepository.findById(memberId).orElseThrow();
-//        return jwtTokenUtils.createTokens(member, List.of(new SimpleGrantedAuthority("ROLE_MEMBER")));
-//    }
 }
