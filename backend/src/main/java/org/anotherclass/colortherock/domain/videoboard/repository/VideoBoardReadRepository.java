@@ -2,11 +2,10 @@ package org.anotherclass.colortherock.domain.videoboard.repository;
 
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import org.anotherclass.colortherock.domain.member.entity.QMember;
-import org.anotherclass.colortherock.domain.video.entity.QVideo;
-import org.anotherclass.colortherock.domain.videoboard.entity.QVideoBoard;
 import org.anotherclass.colortherock.domain.videoboard.entity.VideoBoard;
 import org.anotherclass.colortherock.domain.videoboard.request.VideoBoardSearchRequest;
+import org.anotherclass.colortherock.domain.videoboard.response.QVideoBoardSummaryResponse;
+import org.anotherclass.colortherock.domain.videoboard.response.VideoBoardSummaryResponse;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.SliceImpl;
@@ -14,6 +13,10 @@ import org.springframework.stereotype.Repository;
 
 import javax.persistence.EntityManager;
 import java.util.List;
+
+import static org.anotherclass.colortherock.domain.member.entity.QMember.member;
+import static org.anotherclass.colortherock.domain.videoboard.entity.QVideoBoard.videoBoard;
+import static org.anotherclass.colortherock.domain.video.entity.QVideo.video;
 
 @Repository
 public class VideoBoardReadRepository {
@@ -25,19 +28,24 @@ public class VideoBoardReadRepository {
         this.query = new JPAQueryFactory(em);
     }
 
-    QVideo video = QVideo.video;
-    QVideoBoard videoBoard = QVideoBoard.videoBoard;
-    QMember member = QMember.member;
 
-    public Slice<VideoBoard> searchByCond(VideoBoardSearchRequest condition, Pageable pageable) {
+    public Slice<VideoBoardSummaryResponse> searchByCond(VideoBoardSearchRequest condition, Pageable pageable) {
 
         Long lastStoreId = condition.getStoreId();
         String gymNameCond = condition.getGymName();
         String colorCond = condition.getColor();
 
-        List<VideoBoard> results = query.selectFrom(videoBoard)
-                .join(videoBoard.video, video)
-                .fetchJoin()
+        List<VideoBoardSummaryResponse> fetch = query.select(new QVideoBoardSummaryResponse(
+                        videoBoard.id,
+                        videoBoard.title,
+                        video.thumbnailURL,
+                        video.color,
+                        video.gymName,
+                        videoBoard.createdDate
+                ))
+                .from(videoBoard)
+                .join(video)
+                .on(videoBoard.id.eq(video.id))
                 .where(
                         // 숨김처리 되어 있지 않은 영상만 가져오기
                         videoBoard.isHidden.eq(false),
@@ -52,8 +60,16 @@ public class VideoBoardReadRepository {
                 .limit(pageable.getPageSize() + 1L)
                 .fetch();
 
+        boolean hasNext = false;
+
+        // 조회한 결과 개수가 요청한 페이지 사이즈보다 크면 뒤에 더 있음, next = true
+        if (fetch.size() > pageable.getPageSize()) {
+            hasNext = true;
+            fetch.remove(pageable.getPageSize());
+        }
+
+        return new SliceImpl<>(fetch, pageable, hasNext);
         // 무한 스크롤 처리
-        return checkLastPage(pageable, results);
     }
 
     public Slice<VideoBoard> getMySuccessPosts(Long memberId, Long storeId, Pageable pageable) {

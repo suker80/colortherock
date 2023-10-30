@@ -1,9 +1,11 @@
 package org.anotherclass.colortherock.domain.videoboard.response;
 
+import com.querydsl.core.annotations.QueryProjection;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Builder
 @Getter
@@ -28,4 +30,15 @@ public class VideoBoardSummaryResponse {
     private String gymName;
     @Schema(description = "생성 시간")
     private LocalDate createdDate;
+
+    @QueryProjection
+    public VideoBoardSummaryResponse(Long videoBoardId, String title, String thumbnailURL, String color, String gymName, LocalDateTime createdDate) {
+        this.videoBoardId = videoBoardId;
+        this.title = title;
+        this.thumbnailURL = thumbnailURL;
+        this.color = color;
+        this.colorCode = ColorCodeKorean.getColor(color);
+        this.gymName = gymName;
+        this.createdDate = createdDate.toLocalDate();
+    }
 }

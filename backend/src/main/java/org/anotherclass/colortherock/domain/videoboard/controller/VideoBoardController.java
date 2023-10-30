@@ -58,7 +58,7 @@ public class VideoBoardController {
     @PostMapping(value = "/board/local", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE, MediaType.APPLICATION_JSON_VALUE})
     public BaseResponse<Long> uploadSuccessPostFromLocalVideo(@AuthenticationPrincipal MemberDetails memberDetails, @Valid @RequestPart LocalSuccessVideoUploadRequest localSuccessVideoUploadRequest, @RequestPart MultipartFile newVideo) {
         Long videoId = videoService.uploadSuccessVideo(memberDetails, newVideo, localSuccessVideoUploadRequest);
-        log.info("{}" , localSuccessVideoUploadRequest.getShootingTime());
+        log.info("{}", localSuccessVideoUploadRequest.getShootingTime());
         // 운동 게시글 업로드
         SuccessVideoUploadRequest request = SuccessVideoUploadRequest.builder()
                 .title(localSuccessVideoUploadRequest.getTitle())
@@ -77,7 +77,7 @@ public class VideoBoardController {
     @GetMapping("/board/myvideo")
     public BaseResponse<List<VideoListResponse>> getMySuccessVideoList(@AuthenticationPrincipal MemberDetails memberDetails, @Valid MySuccessVideoRequest request) {
         Member member = memberDetails.getMember();
-        log.info("{}" , request.getShootingDate());
+        log.info("{}", request.getShootingDate());
         List<VideoListResponse> mySuccessVideoList = videoService.getMySuccessVideoList(member, request);
         return new BaseResponse<>(mySuccessVideoList);
     }
