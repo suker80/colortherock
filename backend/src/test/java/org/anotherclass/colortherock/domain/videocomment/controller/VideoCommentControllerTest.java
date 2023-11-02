@@ -107,6 +107,7 @@ class VideoCommentControllerTest extends IntegrationTest {
         url += "comment";
         MockHttpServletResponse response = mockMvc.perform(
                         get(url)
+                                .header(HttpHeaders.AUTHORIZATION, token)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .param("videoBoardId", String.valueOf(videoBoard.getId()))
                                 .param("storeId", String.valueOf(-1))
@@ -154,6 +155,7 @@ class VideoCommentControllerTest extends IntegrationTest {
 //        url += "comment";
         MockHttpServletResponse response = mockMvc.perform(
                         get(url)
+                                .header(HttpHeaders.AUTHORIZATION, token)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .param("videoBoardId", String.valueOf(videoBoard.getId()))
                                 .param("storeId", String.valueOf(-1))

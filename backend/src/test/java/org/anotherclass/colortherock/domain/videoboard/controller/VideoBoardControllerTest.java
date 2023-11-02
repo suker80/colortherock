@@ -8,6 +8,7 @@ import org.anotherclass.colortherock.domain.videoboard.entity.VideoBoard;
 import org.anotherclass.colortherock.domain.videoboard.repository.VideoBoardRepository;
 import org.anotherclass.colortherock.domain.videoboard.request.SuccessPostUpdateRequest;
 import org.anotherclass.colortherock.domain.videoboard.response.VideoBoardSummaryResponse;
+import org.anotherclass.colortherock.domain.videocomment.entity.VideoComment;
 import org.anotherclass.colortherock.global.common.BaseResponse;
 import org.anotherclass.colortherock.global.security.jwt.JwtTokenUtils;
 import org.junit.jupiter.api.BeforeEach;
@@ -86,9 +87,22 @@ class VideoBoardControllerTest extends IntegrationTest {
                         .build();
                 em.persist(videoBoard);
                 videoBoard.getVideo().videoPosted();
-                videoBoardIds.add(videoBoard.getId());
+                Long id = videoBoard.getId();
+                videoBoardIds.add(id);
+                for (int j = 0; j < 10; j++) {
+                    VideoComment vc = VideoComment.builder()
+                            .member(member)
+                            .content("내용")
+                            .videoBoard(videoBoard)
+                            .build();
+                    em.persist(vc);
+                }
+
+
             }
         }
+        em.flush();
+        em.clear();
         token = BEARER_PREFIX + jwtTokenUtils.createTokens(member, List.of(new SimpleGrantedAuthority("ROLE_MEMBER")));
     }
 
@@ -207,16 +221,19 @@ class VideoBoardControllerTest extends IntegrationTest {
 
     @Test
     @DisplayName("완등 영상 게시글 삭제")
+
     void deleteSuccessPost() throws Exception {
         url += "detail";
         Long videoBoardId = videoBoardIds.get(0);
         mockMvc.perform(
-                delete(url)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .param("videoBoardId", String.valueOf(videoBoardId))
-                        .header(HttpHeaders.AUTHORIZATION, token)
-        ).andExpect(jsonPath("$.status", is(200)));
-
+                        delete(url)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .param("videoBoardId", String.valueOf(videoBoardId))
+                                .header(HttpHeaders.AUTHORIZATION, token)
+                ).andExpect(jsonPath("$.status", is(200)))
+                .andDo(print());
+        em.flush();
+        em.clear();
         Optional<VideoBoard> byId = videoBoardRepository.findById(videoBoardId);
         assertTrue(byId.isEmpty());
     }
@@ -237,6 +254,8 @@ class VideoBoardControllerTest extends IntegrationTest {
         BaseResponse<List<VideoBoardSummaryResponse>> arrayList = objectMapper.readValue(response.getContentAsString(), BaseResponse.class);
         assertEquals(MY_PAGE_SIZE, arrayList.getResult().size());
     }
+
+
 
 
 }
