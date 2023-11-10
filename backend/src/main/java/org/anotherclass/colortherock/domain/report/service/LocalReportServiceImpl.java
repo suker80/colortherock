@@ -14,6 +14,8 @@ import org.anotherclass.colortherock.domain.videoboard.repository.VideoBoardRepo
 import org.anotherclass.colortherock.global.error.GlobalErrorCode;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 
 @Slf4j
 @Service
@@ -23,6 +25,7 @@ public class LocalReportServiceImpl implements ReportService {
     private final ReportRepository reportRepository;
     private final ReportReadRepository reportReadRepository;
     private final VideoBoardRepository videoBoardRepository;
+
 
     public void reportPost(Member member, PostReportRequest request) {
         VideoBoard videoBoard = videoBoardRepository.findById(request.getVideoBoardId())
@@ -38,10 +41,7 @@ public class LocalReportServiceImpl implements ReportService {
                 .member(member)
                 .build();
         reportRepository.save(newReport);
-        if (checkReportNum(request.getVideoBoardId()) >= 5) {
-            videoBoard.changeToHidden();
-            videoBoardRepository.save(videoBoard);
-        }
+        videoBoardRepository.changeHiddenState(videoBoard.getId(), true);
     }
 
     // 해당 게시글이 몇 명의 유저로부터 신고 당했는지 확인

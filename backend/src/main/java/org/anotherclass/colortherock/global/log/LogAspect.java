@@ -14,7 +14,7 @@ import org.springframework.util.StopWatch;
  * 실행 시간을 측정하는 Aspect
  *
  */
-@Aspect
+//@Aspect
 @Slf4j
 @Component
 @Order(1)

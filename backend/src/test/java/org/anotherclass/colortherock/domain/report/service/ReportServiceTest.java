@@ -20,16 +20,20 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.transaction.annotation.Transactional;
-
+import org.springframework.test.annotation.Rollback;
+import javax.persistence.EntityManager;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
-@Transactional
 class ReportServiceTest {
+    @Autowired
+    EntityManager entityManager;
 
     @Autowired
     private MemberRepository memberRepository;
@@ -163,4 +167,44 @@ class ReportServiceTest {
 
     }
 
+    @Test
+    @DisplayName("신고 동시성 테스트")
+    @Rollback
+    void q3reportConcurrencyTest() throws InterruptedException {
+
+        ExecutorService executor = Executors.newFixedThreadPool(3);
+        CountDownLatch countDownLatch = new CountDownLatch(3);
+
+        Member member1 = memberRepository.findById(memberIds.get(5))
+                .orElseThrow(() -> new GlobalBaseException(GlobalErrorCode.USER_NOT_FOUND));
+        Member member2 = memberRepository.findById(memberIds.get(6))
+                .orElseThrow(() -> new GlobalBaseException(GlobalErrorCode.USER_NOT_FOUND));
+        Member member3 = memberRepository.findById(memberIds.get(7))
+                .orElseThrow(() -> new GlobalBaseException(GlobalErrorCode.USER_NOT_FOUND));
+        PostReportRequest request = new PostReportRequest(videoBoardIds.get(0), "TYPE_A");
+        executor.execute(() -> {
+            reportService.reportPost(member1, request);
+            countDownLatch.countDown();
+        });
+        executor.execute(() -> {
+            reportService.reportPost(member2, request);
+            countDownLatch.countDown();
+
+        });
+        executor.execute(() -> {
+            reportService.reportPost(member3, request);
+            countDownLatch.countDown();
+
+        });
+        countDownLatch.await();
+        executor.shutdown();
+        Long count = reportService.checkReportNum(videoBoardIds.get(0));
+        VideoBoard vb1 = videoBoardRepository.findById(videoBoardIds.get(0)).orElseThrow();
+        Boolean isHidden = vb1.getIsHidden();
+        System.out.println("isHidden = " + isHidden);
+        assertEquals(5, count);
+        assertTrue(isHidden);
+
+
+    }
 }
